@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinLex - Financial Compliance Auditing Platform</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>FinLex</h1>
+            <nav>
+                <ul>
+                    <li><a href="#" class="active" data-page="dashboard">Dashboard</a></li>
+                    <li><a href="#" data-page="upload">Data Upload</a></li>
+                    <li><a href="#" data-page="policies">Policy Management</a></li>
+                    <li><a href="#" data-page="scan">Compliance Scan</a></li>
+                    <li><a href="#" data-page="reports">Reports</a></li>
+                </ul>
+            </nav>
+            <div class="user-info">
+                <span>Welcome, Admin</span>
+                <button id="logout-btn">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Dashboard Page -->
+        <section id="dashboard" class="page active">
+            <h2>Dashboard</h2>
+            <div class="dashboard-stats">
+                <div class="stat-card">
+                    <h3>Total Transactions</h3>
+                    <p id="total-transactions">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Active Policies</h3>
+                    <p id="active-policies">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Violations Detected</h3>
+                    <p id="violations-count">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>High Risk Alerts</h3>
+                    <p id="high-risk-alerts">0</p>
+                </div>
+            </div>
+            
+            <div class="charts">
+                <div class="chart-container">
+                    <h3>Violations by Risk Level</h3>
+                    <canvas id="risk-chart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>Compliance Trends</h3>
+                    <canvas id="trend-chart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Data Upload Page -->
+        <section id="upload" class="page">
+            <h2>Data Upload</h2>
+            <div class="upload-area" id="drop-area">
+                <p>Drag & drop your CSV transaction file here</p>
+                <p>or</p>
+                <button id="browse-btn">Browse Files</button>
+                <input type="file" id="file-input" accept=".csv" hidden>
+            </div>
+            <div id="upload-status"></div>
+            <button id="process-btn" disabled>Process Transactions</button>
+        </section>
+
+        <!-- Policy Management Page -->
+        <section id="policies" class="page">
+            <h2>Policy Management</h2>
+            <div class="policy-actions">
+                <button id="add-policy-btn">Add New Policy</button>
+            </div>
+            <div class="policy-list">
+                <h3>Active Policies</h3>
+                <table id="policies-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Jurisdiction</th>
+                            <th>Category</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Policy rows will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Compliance Scan Page -->
+        <section id="scan" class="page">
+            <h2>Compliance Scan</h2>
+            <div class="scan-controls">
+                <button id="run-scan-btn">Run Compliance Scan</button>
+                <div id="scan-status"></div>
+            </div>
+            <div class="violations-list">
+                <h3>Detected Violations</h3>
+                <table id="violations-table">
+                    <thead>
+                        <tr>
+                            <th>Transaction ID</th>
+                            <th>Policy</th>
+                            <th>Risk Level</th>
+                            <th>Description</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Violations will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Reports Page -->
+        <section id="reports" class="page">
+            <h2>Reports</h2>
+            <div class="report-actions">
+                <button id="generate-report-btn">Generate New Report</button>
+            </div>
+            <div class="reports-list">
+                <h3>Generated Reports</h3>
+                <table id="reports-table">
+                    <thead>
+                        <tr>
+                            <th>Report ID</th>
+                            <th>Generated At</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Reports will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal for adding policies -->
+    <div id="policy-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Add New Policy</h2>
+            <form id="policy-form">
+                <div class="form-group">
+                    <label for="policy-title">Title:</label>
+                    <input type="text" id="policy-title" required>
+                </div>
+                <div class="form-group">
+                    <label for="policy-jurisdiction">Jurisdiction:</label>
+                    <input type="text" id="policy-jurisdiction" required>
+                </div>
+                <div class="form-group">
+                    <label for="policy-category">Category:</label>
+                    <input type="text" id="policy-category" required>
+                </div>
+                <div class="form-group">
+                    <label for="policy-content">Content:</label>
+                    <textarea id="policy-content" rows="10" required></textarea>
+                </div>
+                <button type="submit">Save Policy</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal for viewing policies -->
+    <div id="view-policy-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="view-policy-title">Policy Details</h2>
+            <div id="view-policy-content"></div>
+        </div>
+    </div>
+
+    <!-- Modal for viewing violations -->
+    <div id="view-violation-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="view-violation-title">Violation Details</h2>
+            <div id="view-violation-content"></div>
+        </div>
+    </div>
+
+    <!-- Modal for viewing reports -->
+    <div id="view-report-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="view-report-title">Report Details</h2>
+            <div id="view-report-content"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
