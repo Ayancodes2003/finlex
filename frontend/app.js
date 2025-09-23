@@ -675,16 +675,25 @@ function setupReportListeners() {
 }
 
 function generateReport() {
-    // Call the API to generate a report
-    fetch('/api/reports/generate', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            message: 'Report generation initiated',
-            timestamp: new Date().toISOString()
-        })
+    // First, we need to fetch the required data for report generation
+    Promise.all([
+        fetch('/api/compliance/violations').then(res => res.json()),
+        fetch('/api/transactions').then(res => res.json()),
+        fetch('/api/policies').then(res => res.json())
+    ])
+    .then(([violations, transactions, policies]) => {
+        // Call the API to generate a report with the required data
+        return fetch('/api/reports/generate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                violations_data: violations,
+                transactions_data: transactions,
+                policies_data: policies
+            })
+        });
     })
     .then(response => {
         if (response.ok) {
