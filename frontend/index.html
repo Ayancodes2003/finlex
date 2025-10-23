@@ -65,10 +65,12 @@
         <section id="upload" class="page">
             <h2>Data Upload</h2>
             <div class="upload-area" id="drop-area">
-                <p>Drag & drop your CSV transaction file here</p>
+                <div class="upload-icon">📁</div>
+                <p>Drag & drop your transaction files here</p>
+                <p class="file-types">Supports CSV and PDF formats</p>
                 <p>or</p>
                 <button id="browse-btn">Browse Files</button>
-                <input type="file" id="file-input" accept=".csv" hidden>
+                <input type="file" id="file-input" accept=".csv,.pdf" hidden>
             </div>
             <div id="upload-status"></div>
             <button id="process-btn" disabled>Process Transactions</button>

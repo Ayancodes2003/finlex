@@ -43,12 +43,10 @@ htmlcov/
 .coverage
 .coverage.*
 .cache
-nosetests.xml
 coverage.xml
 *.cover
 *.py.cover
 .hypothesis/
-.pytest_cache/
 cover/
 
 # Translations
@@ -216,6 +214,3 @@ transactions.db
 # Docker
 .env
 docker-compose.override.yml
-
-# Test files
-test_transactions.csv

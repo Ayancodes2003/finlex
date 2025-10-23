@@ -8,7 +8,6 @@ import uuid
 from datetime import datetime
 import uvicorn
 import sys
-import os
 import json
 import google.generativeai as genai
 
@@ -16,6 +15,16 @@ import google.generativeai as genai
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from data_processor import DataProcessor
+
+# Import PyPDF2 for PDF processing
+PDF_PROCESSING_AVAILABLE = False
+try:
+    import importlib
+    PyPDF2 = importlib.import_module('PyPDF2')
+    PDF_PROCESSING_AVAILABLE = True
+except ImportError:
+    PyPDF2 = None
+    print("Warning: PyPDF2 not installed. PDF processing will be disabled.")
 
 app = FastAPI(title="Transaction Ingest Service", version="1.0.0")
 
@@ -191,9 +200,19 @@ def analyze_transaction_simple(transaction_data):
 # Upload CSV file and parse transactions
 @app.post("/upload")
 async def upload_transactions(file: UploadFile = File(...)):
-    if not file.filename or not file.filename.endswith('.csv'):
-        raise HTTPException(status_code=400, detail="Only CSV files are allowed")
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="No file provided")
     
+    # Check file extension
+    if file.filename.endswith('.csv'):
+        return await process_csv_file(file)
+    elif file.filename.endswith('.pdf'):
+        return await process_pdf_file(file)
+    else:
+        raise HTTPException(status_code=400, detail="Only CSV and PDF files are allowed")
+
+async def process_csv_file(file: UploadFile):
+    """Process CSV file and extract transactions"""
     try:
         # Read CSV file
         contents = await file.read()
@@ -237,10 +256,37 @@ async def upload_transactions(file: UploadFile = File(...)):
             transactions.append(transaction)
         
         conn.commit()
-        return {"message": f"Successfully processed {len(transactions)} transactions", "transactions": transactions}
+        return {"message": f"Successfully processed {len(transactions)} transactions from CSV", "transactions": transactions}
     
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error processing CSV file: {str(e)}")
+
+async def process_pdf_file(file: UploadFile):
+    """Process PDF file and extract transactions"""
+    if not PDF_PROCESSING_AVAILABLE or not PyPDF2:
+        raise HTTPException(status_code=500, detail="PDF processing is not available. PyPDF2 library is not installed.")
+    
+    try:
+        # Read PDF file
+        contents = await file.read()
+        from io import BytesIO
+        pdf_reader = PyPDF2.PdfReader(BytesIO(contents))
+        
+        # Extract text from all pages
+        text = ""
+        for page in pdf_reader.pages:
+            text += page.extract_text() + "\n"
+        
+        # Process PDF text to extract transactions
+        result = data_processor.process_pdf_transactions(text)
+        
+        if result['success']:
+            return {"message": result['message'], "statistics": result['statistics']}
+        else:
+            raise HTTPException(status_code=500, detail=result['message'])
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing PDF file: {str(e)}")
 
 # Process existing data files
 @app.post("/process-data-files")

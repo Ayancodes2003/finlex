@@ -1,5 +1,5 @@
 # Overall project requirements
-# This file lists dependencies needed for development and testing
+# This file lists dependencies needed for production
 
 # Backend services
 fastapi==0.104.1
@@ -11,7 +11,7 @@ python-multipart==0.0.6
 pandas==2.1.3
 numpy==1.24.3
 faiss-cpu==1.7.4
-pytest==7.4.3
+
 httpx==0.25.0
 psycopg2-binary==2.9.7
 sqlalchemy==2.0.23

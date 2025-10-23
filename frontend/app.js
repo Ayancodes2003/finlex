@@ -122,14 +122,14 @@ function initializeCharts() {
                 label: 'Violations',
                 data: [15, 20, 5],
                 backgroundColor: [
-                    'rgba(244, 67, 54, 0.8)',
-                    'rgba(255, 152, 0, 0.8)',
-                    'rgba(76, 175, 80, 0.8)'
+                    'rgba(239, 71, 111, 0.8)',
+                    'rgba(255, 209, 102, 0.8)',
+                    'rgba(6, 214, 160, 0.8)'
                 ],
                 borderColor: [
-                    'rgba(244, 67, 54, 1)',
-                    'rgba(255, 152, 0, 1)',
-                    'rgba(76, 175, 80, 1)'
+                    'rgba(239, 71, 111, 1)',
+                    'rgba(255, 209, 102, 1)',
+                    'rgba(6, 214, 160, 1)'
                 ],
                 borderWidth: 1
             }]
@@ -142,6 +142,11 @@ function initializeCharts() {
                     ticks: {
                         stepSize: 5
                     }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
                 }
             }
         }
@@ -157,18 +162,18 @@ function initializeCharts() {
                 label: 'Transaction Types',
                 data: [1082, 2587, 437, 631, 263],
                 backgroundColor: [
+                    'rgba(67, 97, 238, 0.8)',
+                    'rgba(114, 9, 183, 0.8)',
                     'rgba(30, 60, 114, 0.8)',
                     'rgba(41, 182, 246, 0.8)',
-                    'rgba(38, 198, 218, 0.8)',
-                    'rgba(38, 166, 154, 0.8)',
-                    'rgba(139, 195, 74, 0.8)'
+                    'rgba(38, 198, 218, 0.8)'
                 ],
                 borderColor: [
+                    'rgba(67, 97, 238, 1)',
+                    'rgba(114, 9, 183, 1)',
                     'rgba(30, 60, 114, 1)',
                     'rgba(41, 182, 246, 1)',
-                    'rgba(38, 198, 218, 1)',
-                    'rgba(38, 166, 154, 1)',
-                    'rgba(139, 195, 74, 1)'
+                    'rgba(38, 198, 218, 1)'
                 ],
                 borderWidth: 1
             }]
@@ -235,6 +240,11 @@ function setupUploadListeners() {
     function handleDrop(e) {
         const dt = e.dataTransfer;
         const files = dt.files;
+        // Assign dropped files to the hidden input so existing flow works
+        fileInput.files = files;
+        // Trigger change to reuse validation/UI updates
+        const changeEvent = new Event('change');
+        fileInput.dispatchEvent(changeEvent);
         handleFiles(files);
     }
     
@@ -247,11 +257,13 @@ function setupUploadListeners() {
     function handleFiles(files) {
         if (files.length > 0) {
             const file = files[0];
-            if (file.type === 'text/csv' || file.name.endsWith('.csv')) {
+            // Accept both CSV and PDF files
+            if (file.type === 'text/csv' || file.name.endsWith('.csv') || 
+                file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
                 displayUploadStatus(`Selected file: ${file.name}`, 'success');
                 document.getElementById('process-btn').disabled = false;
             } else {
-                displayUploadStatus('Please select a CSV file', 'error');
+                displayUploadStatus('Please select a CSV or PDF file', 'error');
                 document.getElementById('process-btn').disabled = true;
             }
         }
@@ -519,6 +531,13 @@ function setupScanListeners() {
 
 function runComplianceScan() {
     const statusDiv = document.getElementById('scan-status');
+    const runScanBtn = document.getElementById('run-scan-btn');
+    const originalBtnText = runScanBtn.innerHTML;
+    
+    // Show loading spinner
+    runScanBtn.innerHTML = '<span class="loading-spinner"></span> Scanning...';
+    runScanBtn.disabled = true;
+    
     statusDiv.textContent = 'Running compliance scan...';
     statusDiv.className = 'processing';
     statusDiv.style.display = 'block';
@@ -551,6 +570,11 @@ function runComplianceScan() {
         console.error('Error running compliance scan:', error);
         statusDiv.textContent = 'Error running compliance scan: ' + error.message;
         statusDiv.className = 'error';
+    })
+    .finally(() => {
+        // Restore button
+        runScanBtn.innerHTML = originalBtnText;
+        runScanBtn.disabled = false;
     });
 }
 
@@ -675,6 +699,13 @@ function setupReportListeners() {
 }
 
 function generateReport() {
+    const generateReportBtn = document.getElementById('generate-report-btn');
+    const originalBtnText = generateReportBtn.innerHTML;
+    
+    // Show loading spinner
+    generateReportBtn.innerHTML = '<span class="loading-spinner"></span> Generating...';
+    generateReportBtn.disabled = true;
+    
     // First, we need to fetch the required data for report generation
     Promise.all([
         fetch('/api/compliance/violations').then(res => res.json()),
@@ -709,6 +740,11 @@ function generateReport() {
     .catch(error => {
         console.error('Error generating report:', error);
         alert('Error generating report: ' + error.message);
+    })
+    .finally(() => {
+        // Restore button
+        generateReportBtn.innerHTML = originalBtnText;
+        generateReportBtn.disabled = false;
     });
 }
 

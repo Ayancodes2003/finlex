@@ -10,6 +10,7 @@ import sqlite3
 import uuid
 from datetime import datetime
 import numpy as np
+import re
 
 class DataProcessor:
     """Processor for different types of compliance data"""
@@ -137,6 +138,106 @@ class DataProcessor:
             return {
                 'success': False,
                 'message': f'Error processing Paysim data: {str(e)}'
+            }
+    
+    def process_pdf_transactions(self, pdf_text: str) -> Dict[str, Any]:
+        """
+        Process transaction data from PDF text content
+        
+        Args:
+            pdf_text: Text content extracted from a PDF file
+            
+        Returns:
+            Dictionary with processing results
+        """
+        try:
+            # This is a simplified implementation for demonstration
+            # In a real-world scenario, you would need more sophisticated PDF parsing
+            
+            # Extract potential transaction data using regex patterns
+            transactions = []
+            
+            # Pattern for transaction lines (example format)
+            # This is a simplified pattern - you would need to adjust based on your PDF format
+            transaction_pattern = r'(\d{4}-\d{2}-\d{2})\s+([A-Z_]+)\s+([$]?[\d,]+\.?\d*)\s+(.*)'
+            matches = re.findall(transaction_pattern, pdf_text)
+            
+            for match in matches:
+                date, trans_type, amount_str, description = match
+                # Clean amount string
+                amount_str = amount_str.replace('$', '').replace(',', '')
+                try:
+                    amount = float(amount_str)
+                except ValueError:
+                    amount = 0.0
+                
+                transaction = {
+                    'id': str(uuid.uuid4()),
+                    'user_id': 'pdf_user',
+                    'amount': amount,
+                    'date': date,
+                    'type': trans_type,
+                    'description': description.strip(),
+                    'metadata': json.dumps({
+                        'source': 'pdf',
+                        'original_line': f"{date} {trans_type} {amount_str} {description}"
+                    })
+                }
+                transactions.append(transaction)
+            
+            # If no structured transactions found, create a simple entry
+            if not transactions:
+                transaction = {
+                    'id': str(uuid.uuid4()),
+                    'user_id': 'pdf_user',
+                    'amount': 0.0,
+                    'date': datetime.now().isoformat(),
+                    'type': 'PDF_IMPORTED',
+                    'description': 'Transaction data imported from PDF document',
+                    'metadata': json.dumps({
+                        'source': 'pdf',
+                        'content_length': len(pdf_text),
+                        'extraction_method': 'basic'
+                    })
+                }
+                transactions.append(transaction)
+            
+            # Store in database
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            
+            # Insert transactions
+            for transaction in transactions:
+                cursor.execute('''
+                    INSERT OR REPLACE INTO transactions 
+                    (id, user_id, amount, date, type, description, metadata)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                ''', (
+                    transaction['id'],
+                    transaction['user_id'],
+                    transaction['amount'],
+                    transaction['date'],
+                    transaction['type'],
+                    transaction['description'],
+                    transaction['metadata']
+                ))
+            
+            conn.commit()
+            conn.close()
+            
+            return {
+                'success': True,
+                'message': f'Successfully processed {len(transactions)} transactions from PDF',
+                'statistics': {
+                    'total_transactions': len(transactions),
+                    'total_amount': sum(t['amount'] for t in transactions)
+                }
+            }
+            
+        except Exception as e:
+            return {
+                'success': False,
+                'message': f'Error processing PDF transactions: {str(e)}'
             }
     
     def process_obliqa_data(self, file_path: str) -> Dict[str, Any]:

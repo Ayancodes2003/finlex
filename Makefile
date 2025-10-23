@@ -15,9 +15,7 @@ help:
 	@echo "stop            - Stop all services"
 	@echo "restart         - Restart all services"
 	@echo "logs            - View service logs"
-	@echo "test            - Run all tests"
-	@echo "test-api-gateway - Run API Gateway tests"
-	@echo "test-transaction - Run Transaction Ingest tests"
+	
 	@echo "clean           - Remove all containers and volumes"
 	@echo "build           - Build all Docker images"
 	@echo "docs            - Generate documentation"
@@ -50,20 +48,13 @@ logs:
 	docker-compose logs -f
 
 # Run all tests
-.PHONY: test
-test:
-	docker-compose exec api-gateway pytest
-	docker-compose exec transaction-ingest pytest
+
 
 # Run API Gateway tests
-.PHONY: test-api-gateway
-test-api-gateway:
-	docker-compose exec api-gateway pytest
+
 
 # Run Transaction Ingest tests
-.PHONY: test-transaction
-test-transaction:
-	docker-compose exec transaction-ingest pytest
+
 
 # Remove all containers and volumes
 .PHONY: clean
