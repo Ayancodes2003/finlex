@@ -1,0 +1,2 @@
+# Ignore the data directory during Vercel builds
+data/

@@ -214,3 +214,4 @@ transactions.db
 # Docker
 .env
 docker-compose.override.yml
+.vercel

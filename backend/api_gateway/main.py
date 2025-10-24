@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.responses import Response
 import uvicorn
+import logging
 import os
 from jose import jwt, JWTError
 from datetime import datetime, timedelta
@@ -10,6 +11,8 @@ from typing import Optional
 import redis
 import json
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("api_gateway")
 app = FastAPI(title="API Gateway Service", version="1.0.0")
 
 # Add CORS middleware
@@ -103,6 +106,7 @@ async def get_transactions():
         response = requests.get(f"{TRANSACTION_SERVICE_URL}/transactions")
         return response.json()
     except Exception as e:
+        logger.error(f"Error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error fetching transactions: {str(e)}")
 
 @app.post("/transactions")
@@ -178,7 +182,8 @@ async def get_policy(policy_id: str):
         if response.status_code == 404:
             raise HTTPException(status_code=404, detail="Policy not found")
         return response.json()
-    except HTTPException:
+    except HTTPException as http_exc:
+        logger.warning(f"HTTP Exception: {http_exc.detail}")
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching policy: {str(e)}")
