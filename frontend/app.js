@@ -98,29 +98,55 @@ function logout() {
 
 // Dashboard functions
 function loadDashboardData() {
-    // In a real implementation, this would fetch from the API
-    // For now, we'll use simulated data based on what we processed
-    
-    // Simulate API calls to get dashboard data
-    document.getElementById('total-transactions').textContent = '5,000';
-    document.getElementById('active-policies').textContent = '12';
-    document.getElementById('violations-count').textContent = '40';
-    document.getElementById('high-risk-alerts').textContent = '15';
-    
-    // Initialize charts
-    initializeCharts();
+    // Fetch data from multiple endpoints and update the dashboard
+    Promise.all([
+        fetch('/transactions').then(res => res.json()),
+        fetch('/policies').then(res => res.json()),
+        fetch('/compliance/violations').then(res => res.json())
+    ])
+    .then(([transactions, policies, violations]) => {
+        // Update dashboard cards
+        document.getElementById('total-transactions').textContent = transactions.length;
+        document.getElementById('active-policies').textContent = policies.length;
+        document.getElementById('violations-count').textContent = violations.length;
+        
+        const highRiskAlerts = violations.filter(v => v.risk === 'high').length;
+        document.getElementById('high-risk-alerts').textContent = highRiskAlerts;
+        
+        // Initialize charts with live data
+        initializeCharts(transactions, violations);
+    })
+    .catch(error => {
+        console.error('Error loading dashboard data:', error);
+        // You can set the dashboard to an error state or show a message here
+        document.getElementById('total-transactions').textContent = 'N/A';
+        document.getElementById('active-policies').textContent = 'N/A';
+        document.getElementById('violations-count').textContent = 'N/A';
+        document.getElementById('high-risk-alerts').textContent = 'N/A';
+    });
 }
 
-function initializeCharts() {
-    // Risk level chart
+function initializeCharts(transactions, violations) {
+    // Clear existing charts if they exist to prevent duplicates
+    if (window.riskChart) window.riskChart.destroy();
+    if (window.trendChart) window.trendChart.destroy();
+
+    // --- Violations by Risk Level Chart ---
+    const riskCounts = { high: 0, medium: 0, low: 0 };
+    violations.forEach(v => {
+        if (v.risk && riskCounts.hasOwnProperty(v.risk.toLowerCase())) {
+            riskCounts[v.risk.toLowerCase()]++;
+        }
+    });
+
     const riskCtx = document.getElementById('risk-chart').getContext('2d');
-    new Chart(riskCtx, {
+    window.riskChart = new Chart(riskCtx, {
         type: 'bar',
         data: {
             labels: ['High', 'Medium', 'Low'],
             datasets: [{
                 label: 'Violations',
-                data: [15, 20, 5],
+                data: [riskCounts.high, riskCounts.medium, riskCounts.low],
                 backgroundColor: [
                     'rgba(239, 71, 111, 0.8)',
                     'rgba(255, 209, 102, 0.8)',
@@ -152,15 +178,20 @@ function initializeCharts() {
         }
     });
     
-    // Trend chart - transaction types
+    // --- Transaction Types Distribution Chart ---
+    const typeCounts = {};
+    transactions.forEach(t => {
+        typeCounts[t.type] = (typeCounts[t.type] || 0) + 1;
+    });
+
     const trendCtx = document.getElementById('trend-chart').getContext('2d');
-    new Chart(trendCtx, {
+    window.trendChart = new Chart(trendCtx, {
         type: 'pie',
         data: {
-            labels: ['CASH_IN', 'PAYMENT', 'TRANSFER', 'CASH_OUT', 'DEBIT'],
+            labels: Object.keys(typeCounts),
             datasets: [{
                 label: 'Transaction Types',
-                data: [1082, 2587, 437, 631, 263],
+                data: Object.values(typeCounts),
                 backgroundColor: [
                     'rgba(67, 97, 238, 0.8)',
                     'rgba(114, 9, 183, 0.8)',

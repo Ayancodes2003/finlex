@@ -282,6 +282,17 @@ async def get_violation(violation_id: str):
 async def get_reports():
     return [{"id": "1", "generated": "2023-01-01T12:00:00Z"}]
 
+@app.get("/reports/{report_id}")
+async def get_report(report_id: str):
+    # This is a placeholder response
+    return {
+        "id": report_id,
+        "generated": "2023-01-01T12:00:00Z",
+        "status": "Completed",
+        "summary": "This is a sample report summary.",
+        "details": "This section would contain the detailed findings of the generated report."
+    }
+
 @app.post("/reports/generate")
 async def generate_report():
     return {"message": "Report generated successfully."}
