@@ -295,7 +295,7 @@ function setupUploadListeners() {
         formData.append('file', file);
         
         // Upload file to the API
-        fetch('/api/upload', {
+        fetch('/upload', {
             method: 'POST',
             body: formData
         })
@@ -376,7 +376,7 @@ function savePolicy() {
     };
     
     // Save to API
-    fetch('/api/policies', {
+    fetch('/policies', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -407,7 +407,7 @@ function savePolicy() {
 
 function loadPolicies() {
     // Fetch from the API through the Nginx proxy
-    fetch('/api/policies')
+    fetch('/policies')
         .then(response => response.json())
         .then(policies => {
             const tbody = document.querySelector('#policies-table tbody');
@@ -459,7 +459,7 @@ function loadPolicies() {
 
 function viewPolicy(id) {
     // Fetch policy details from API through the Nginx proxy
-    fetch(`/api/policies/${id}`)
+    fetch(`/policies/${id}`)
         .then(response => response.json())
         .then(policy => {
             // Display policy in modal
@@ -487,7 +487,7 @@ function viewPolicy(id) {
 function deletePolicy(id) {
     // Delete policy via API
     if (confirm('Are you sure you want to delete this policy?')) {
-        fetch(`/api/policies/${id}`, {
+        fetch(`/policies/${id}`, {
             method: 'DELETE'
         })
         .then(response => {
@@ -544,7 +544,7 @@ function runComplianceScan() {
     
     // In a real implementation, this would send data to the compliance service
     // For now, we'll call the compliance scan endpoint
-    fetch('/api/compliance/scan', {
+    fetch('/compliance/scan', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -580,7 +580,7 @@ function runComplianceScan() {
 
 function loadViolations() {
     // Fetch violations from the API
-    fetch('/api/compliance/violations')
+    fetch('/compliance/violations')
         .then(response => response.json())
         .then(violations => {
             const tbody = document.querySelector('#violations-table tbody');
@@ -630,7 +630,7 @@ function loadViolations() {
 
 function viewViolation(id) {
     // Fetch violation details from API
-    fetch(`/api/compliance/violations/${id}`)
+    fetch(`/compliance/violations/${id}`)
         .then(response => response.json())
         .then(violation => {
             // Display violation in modal
@@ -708,13 +708,13 @@ function generateReport() {
     
     // First, we need to fetch the required data for report generation
     Promise.all([
-        fetch('/api/compliance/violations').then(res => res.json()),
-        fetch('/api/transactions').then(res => res.json()),
-        fetch('/api/policies').then(res => res.json())
+        fetch('/compliance/violations').then(res => res.json()),
+        fetch('/transactions').then(res => res.json()),
+        fetch('/policies').then(res => res.json())
     ])
     .then(([violations, transactions, policies]) => {
         // Call the API to generate a report with the required data
-        return fetch('/api/reports/generate', {
+        return fetch('/reports/generate', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -750,7 +750,7 @@ function generateReport() {
 
 function loadReports() {
     // Fetch reports from the API
-    fetch('/api/reports')
+    fetch('/reports')
         .then(response => response.json())
         .then(reports => {
             const tbody = document.querySelector('#reports-table tbody');
@@ -798,7 +798,7 @@ function loadReports() {
 
 function viewReport(id) {
     // Fetch report details from API
-    fetch(`/api/reports/${id}`)
+    fetch(`/reports/${id}`)
         .then(response => response.json())
         .then(report => {
             // Display report in modal
@@ -842,7 +842,7 @@ function viewReport(id) {
 
 function downloadReport(id) {
     // Fetch report details from API
-    fetch(`/api/reports/${id}`)
+    fetch(`/reports/${id}`)
         .then(response => response.json())
         .then(report => {
             // Create a blob with the report data
