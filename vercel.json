@@ -4,12 +4,20 @@
     {
       "src": "backend/api_gateway/main.py",
       "use": "@vercel/python"
+    },
+    {
+      "src": "frontend/**",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
-      "src": "/(.*)",
+      "src": "/(health|auth|transactions|upload|policies|compliance|reports)(.*)",
       "dest": "backend/api_gateway/main.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/frontend/$1"
     }
   ]
 }
